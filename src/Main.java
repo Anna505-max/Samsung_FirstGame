@@ -3,36 +3,11 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        String person = "\uD83E\uDDD9";
+
         String monster = "\uD83E\uDDDF";
         String castle = "\uD83C\uDFF0";
-
-        int personLive = 3;
-        int sizeBoard = 5;
-        int personX;
-        int personY;
         int step = 0;
-
-        personX = 1;
-        personY = sizeBoard;
-
-        Random random = new Random();
-        int castleX = 1 + random.nextInt(sizeBoard);
-        int castleY = 1;
-
-        String[][] board = new String[sizeBoard][sizeBoard];
-        for (int y = 1; y <= sizeBoard; y++) {
-            for (int x = 1; x <= sizeBoard; x++) {
-                board[y - 1][x - 1] = "  ";
-            }
-        }
-
-        int countMonster = sizeBoard * sizeBoard - sizeBoard - 1;
-        for (int i = 0; i < countMonster; i++) {
-            board[random.nextInt(sizeBoard - 1)][random.nextInt(sizeBoard)] = monster;
-        }
-
-        board[castleY - 1][castleX - 1] = castle;
+       Person person = null;
 
         System.out.println("Привет! Ты готов начать играть в игру? (Напиши: ДА или НЕТ)");
 
@@ -43,57 +18,79 @@ public class Main {
 
         switch (answer) {
             case "ДА":
+                person = new Person(1, 1);
                 System.out.println("Выбери сложность игры (от 1 до 5):");
                 int difficultGame = scanner.nextInt();
+                int sizeBoard;
+                switch (difficultGame) {
+                    case 1:
+                        sizeBoard = 3;
+                        break;
+                    case 2:
+                        sizeBoard = 4;
+                        break;
+                    case 3:
+                        sizeBoard = 5;
+                        break;
+                    case 4:
+                        sizeBoard = 6;
+                        break;
+                    case 5:
+                        sizeBoard = 7;
+                        break;
+                    default:
+                        sizeBoard = 5;
+                        break;
+                }
                 System.out.println("Выбранная сложность:\t" + difficultGame);
+                String[][] board = new String[sizeBoard][sizeBoard];
+                startOne(sizeBoard, monster, castle, board);
 
                 while (true) {
-                    board[personY - 1][personX - 1] = person;
-                    outputBoard(board, personLive);
+                    board[person.getY() - 1][person.getX() - 1] = person.getImage();
+                    outputBoard(board, person.getLive(), sizeBoard);
 
                     System.out.println("Введите, куда будет ходить персонаж "
                             + "(ход возможен только по вертикали или горизонтали на одну клетку)"
-                            + "\nКоординаты персонажа — (x: " + personX + ", y: " + personY + ")");
+                            + "\nКоординаты персонажа — (x: " + person.getX() + ", y: " + person.getY() + ")");
 
                     int x = scanner.nextInt();
                     int y = scanner.nextInt();
                     System.out.println(x + ", " + y);
 
-                    if (x != personX && y != personY) {
+                    if (x != person.getX() && y != person.getY()) {
                         System.out.println("Некорректный ход");
-                    } else if (Math.abs(x - personX) == 1 || Math.abs(y - personY) == 1) {
+                    } else if (Math.abs(x - person.getX()) == 1 || Math.abs(y - person.getY()) == 1) {
                         if (board[y - 1][x - 1].equals("  ")) {
-                            board[personY - 1][personX - 1] = "  ";
-                            personX = x;
-                            personY = y;
+                            board[person.getY() - 1][person.getX() - 1] = "  ";
+                            person.move(x, y);
                             step++;
                             System.out.println("Ход корректный; новые координаты: "
-                                    + personX + ", " + personY
+                                    + person.getX() + ", " + person.getY()
                                     + "\nХод номер: " + step);
                         } else if (board[y - 1][x - 1].equals(castle)) {
-                            System.out.println("Вы прошли игру!");
+                            System.out.println("Вы прошли игру! Поздравляю!");
                             break;
                         } else {
                             System.out.println("Решите задачу:");
                             if (taskMonster(difficultGame)) {
-                                board[personY - 1][personX - 1] = "  ";
-                                personX = x;
-                                personY = y;
+                                board[person.getY() - 1][person.getX() - 1] = "  ";
+                                person.move(x, y);
                                 step++;
                             } else {
-                                personLive--;
+                                person.downLive();
                             }
                         }
                     } else {
                         System.out.println("Координаты не изменены");
                     }
 
-                    if (personLive <= 0) {
+                    if (person.getLive() <= 0) {
                         break;
                     }
                 }
 
-                if (personLive <= 0) {
+                if (person.getLive() <= 0) {
                     System.out.println("Закончились жизни. Итог: ...");
                 }
                 break;
@@ -107,6 +104,28 @@ public class Main {
                 break;
         }
     }
+
+
+    static void startOne(int sizeBoard, String monster, String castle, String[][] board) {
+        Random random = new Random();
+        int castleX = 1 + random.nextInt(sizeBoard);
+        int castleY = 1;
+
+
+        for (int y = 1; y <= sizeBoard; y++) {
+            for (int x = 1; x <= sizeBoard; x++) {
+                board[y - 1][x - 1] = "  ";
+            }
+        }
+
+        int countMonster = sizeBoard * sizeBoard - sizeBoard - 1;
+        for (int i = 0; i < countMonster; i++) {
+            board[random.nextInt(sizeBoard - 1)][random.nextInt(sizeBoard)] = monster;
+        }
+
+        board[castleY - 1][castleX - 1] = castle;
+    }
+
 
     static boolean taskMonster(int difficultGame) {
         if (difficultGame == 1) {
@@ -126,25 +145,102 @@ public class Main {
                 System.out.println("Ты проиграл эту битву!");
                 return false;
             }
+        } else if (difficultGame == 2) {
+            Random random = new Random();
+            int a = 100 + random.nextInt(100);
+            int b = 100 + random.nextInt(100);
+            int trueAnswer = a + b;
+
+            System.out.println("Реши пример: " + a + " + " + b + " = ?");
+            Scanner sc = new Scanner(System.in);
+            int ans = sc.nextInt();
+
+            if (trueAnswer == ans) {
+                System.out.println("Верно! Ты победил монстра");
+                return true;
+            } else {
+                System.out.println("Ты проиграл эту битву!");
+                return false;
+            }
+        } else if (difficultGame == 3) {
+            Random random = new Random();
+            int a = 200 + random.nextInt(100);
+            int b = 200 + random.nextInt(100);
+            int trueAnswer = a + b;
+
+            System.out.println("Реши пример: " + a + " + " + b + " = ?");
+            Scanner sc = new Scanner(System.in);
+            int ans = sc.nextInt();
+
+            if (trueAnswer == ans) {
+                System.out.println("Верно! Ты победил монстра");
+                return true;
+            } else {
+                System.out.println("Ты проиграл эту битву!");
+                return false;
+            }
+        } else if (difficultGame == 4) {
+            Random random = new Random();
+            int a = 300 + random.nextInt(100);
+            int b = 300 + random.nextInt(100);
+            int trueAnswer = a + b;
+
+            System.out.println("Реши пример: " + a + " + " + b + " = ?");
+            Scanner sc = new Scanner(System.in);
+            int ans = sc.nextInt();
+
+            if (trueAnswer == ans) {
+                System.out.println("Верно! Ты победил монстра");
+                return true;
+            } else {
+                System.out.println("Ты проиграл эту битву!");
+                return false;
+            }
+        } else if (difficultGame == 5) {
+            Random random = new Random();
+            int a = 400 + random.nextInt(100);
+            int b = 400 + random.nextInt(100);
+            int trueAnswer = a + b;
+
+            System.out.println("Реши пример: " + a + " + " + b + " = ?");
+            Scanner sc = new Scanner(System.in);
+            int ans = sc.nextInt();
+
+            if (trueAnswer == ans) {
+                System.out.println("Верно! Ты победил монстра");
+                return true;
+            } else {
+                System.out.println("Ты проиграл эту битву!");
+                return false;
+            }
         } else {
-            // какой-то код
+
             return false;
         }
+
     }
 
-    static void outputBoard(String[][] board, int live) {
-        String leftBlock = "| ";
+    static void outputBoard(String[][] board, int live, int sizeBoard) {
+        String leftBlock = "|";
         String rightBlock = "|";
-        String wall = "+ —— + —— + —— + —— + —— +";
+        String wall = "+——";
+
 
         for (String[] row : board) {
-            System.out.println(wall);
-            for (String col : row) {
-                System.out.print(leftBlock + col + " ");
+            for (int i = 0; i < sizeBoard; i++) {
+                System.out.print(wall);
+            }
+            System.out.println("+");
+            for (String cell : row) {
+                System.out.print(leftBlock);
+                System.out.print(cell);
             }
             System.out.println(rightBlock);
         }
-        System.out.println(wall);
+        for (int i = 0; i < sizeBoard; i++) {
+            System.out.print(wall);
+        }
+        System.out.println("+");
 
         System.out.println("Количество жизней:\t" + live + "\n");
     }
